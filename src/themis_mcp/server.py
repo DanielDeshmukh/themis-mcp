@@ -152,6 +152,17 @@ async def health_check(request: Request) -> Response:
     )
 
 
+@mcp.custom_route("/metrics", methods=["GET"])
+async def metrics_endpoint(request: Request) -> Response:
+    """Prometheus metrics endpoint."""
+    from themis_mcp.metrics import metrics
+
+    return Response(
+        content=metrics.to_prometheus(),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
+
+
 if "ask" in _enabled_tools:
 
     @mcp.tool()

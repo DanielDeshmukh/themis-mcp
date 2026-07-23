@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 from themis_mcp.cache import cache
 from themis_mcp.errors import classify_error
+from themis_mcp.metrics import metrics
 from themis_mcp.ratelimit import rate_limiter
 from themis_mcp.resources import DISCLAIMER
 from themis_mcp.structured import LookupResult, ToolResult
@@ -83,7 +85,14 @@ def ask(
     Returns:
         ToolResult with text and structured metadata.
     """
+    metrics.inc_counter("themis_tool_calls_total", {"tool": "themis_ask"})
+    start = time.monotonic()
+
     if _model is None:
+        metrics.inc_counter(
+            "themis_tool_errors_total",
+            {"tool": "themis_ask", "error": "model_not_loaded"},
+        )
         return ToolResult(
             text="THEMIS model not loaded. The server may still be starting up.",
             grounded=False,
@@ -93,6 +102,9 @@ def ask(
 
     if not rate_limiter.is_allowed("themis_ask"):
         reset_time = rate_limiter.time_until_reset("themis_ask")
+        metrics.inc_counter(
+            "themis_tool_errors_total", {"tool": "themis_ask", "error": "rate_limited"}
+        )
         return ToolResult(
             text=f"Rate limit exceeded. Try again in {reset_time:.0f} seconds.",
             grounded=False,
@@ -110,6 +122,12 @@ def ask(
         )
         if cached is not None:
             logger.info(f"Cache hit for question: {question[:50]}...")
+            metrics.inc_counter("themis_cache_hits_total", {"tool": "themis_ask"})
+            metrics.observe_histogram(
+                "themis_tool_duration_seconds",
+                time.monotonic() - start,
+                {"tool": "themis_ask"},
+            )
             return cached  # type: ignore[no-any-return]
 
     with trace_tool("themis_ask", question=question[:100]):
@@ -121,6 +139,15 @@ def ask(
             )
         except Exception as e:
             error = classify_error(e)
+            metrics.inc_counter(
+                "themis_tool_errors_total",
+                {"tool": "themis_ask", "error": error.error_class.value},
+            )
+            metrics.observe_histogram(
+                "themis_tool_duration_seconds",
+                time.monotonic() - start,
+                {"tool": "themis_ask"},
+            )
             return ToolResult(
                 text=error.message,
                 grounded=False,
@@ -135,6 +162,10 @@ def ask(
         act=getattr(response, "act", None),
         confidence=getattr(response, "confidence", None),
         warning=getattr(response, "warning", None),
+    )
+
+    metrics.observe_histogram(
+        "themis_tool_duration_seconds", time.monotonic() - start, {"tool": "themis_ask"}
     )
 
     # Cache result (only for deterministic queries)
@@ -178,12 +209,23 @@ def lookup(act: str, section: str) -> LookupResult:
     Returns:
         LookupResult with structured section data.
     """
+    metrics.inc_counter("themis_tool_calls_total", {"tool": "themis_lookup"})
+    start = time.monotonic()
     section_clean = section.replace("Section ", "").replace("section ", "").strip()
 
     with trace_tool("themis_lookup", act=act, section=section_clean):
         try:
             index = _get_section_index()
         except RuntimeError as e:
+            metrics.inc_counter(
+                "themis_tool_errors_total",
+                {"tool": "themis_lookup", "error": "import_error"},
+            )
+            metrics.observe_histogram(
+                "themis_tool_duration_seconds",
+                time.monotonic() - start,
+                {"tool": "themis_lookup"},
+            )
             return LookupResult(
                 found=False,
                 text=str(e),
@@ -191,7 +233,16 @@ def lookup(act: str, section: str) -> LookupResult:
 
         result = index.lookup(section_clean, act_hint=act)
 
+    metrics.observe_histogram(
+        "themis_tool_duration_seconds",
+        time.monotonic() - start,
+        {"tool": "themis_lookup"},
+    )
+
     if not result.found:
+        metrics.inc_counter(
+            "themis_tool_errors_total", {"tool": "themis_lookup", "error": "not_found"}
+        )
         return LookupResult(
             found=False,
             text=f"Section {section_clean} not found in '{act}'.",
