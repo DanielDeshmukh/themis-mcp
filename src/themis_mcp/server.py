@@ -6,6 +6,7 @@ import logging
 import os
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 from starlette.requests import Request
@@ -89,6 +90,48 @@ mcp = FastMCP(
 )
 
 
+def _format_tool_output(result: Any) -> str:
+    """Convert a ToolResult or LookupResult to a formatted string with disclaimer."""
+    from themis_mcp.resources import DISCLAIMER
+    from themis_mcp.structured import LookupResult, ToolResult
+
+    if isinstance(result, ToolResult):
+        parts = [result.text]
+        meta = []
+        if result.section:
+            meta.append(f"Section: {result.section}")
+        if result.act:
+            meta.append(f"Act: {result.act}")
+        if result.confidence is not None:
+            meta.append(f"Confidence: {result.confidence:.2f}")
+        if result.grounded:
+            meta.append("Grounded: Yes")
+        else:
+            meta.append("Grounded: No")
+        if result.warning:
+            meta.append(f"Warning: {result.warning}")
+        if result.error:
+            meta.insert(0, f"Error ({result.error_class}):")
+        if meta:
+            parts.append("")
+            parts.append("---")
+            parts.extend(meta)
+    elif isinstance(result, LookupResult):
+        if result.found:
+            header = f"Section {result.section_number} — {result.act_name}"
+            parts = [header, "", result.text or "No text available."]
+        else:
+            parts = [result.text or "Section not found."]
+    else:
+        parts = [str(result)]
+
+    parts.append("")
+    parts.append("---")
+    parts.append(DISCLAIMER)
+
+    return "\n".join(parts)
+
+
 @mcp.custom_route("/health", methods=["GET"])
 async def health_check(request: Request) -> Response:
     """Health check endpoint for container orchestration and monitoring."""
@@ -129,7 +172,8 @@ if "ask" in _enabled_tools:
         The response includes section/act metadata and grounding status.
         All responses include a legal disclaimer.
         """
-        return ask(question, temperature=temperature, max_tokens=max_tokens)
+        result = ask(question, temperature=temperature, max_tokens=max_tokens)
+        return _format_tool_output(result)
 
 
 if "lookup" in _enabled_tools:
@@ -148,7 +192,8 @@ if "lookup" in _enabled_tools:
         Returns:
             The raw section text with a legal disclaimer.
         """
-        return lookup(act=act, section=section)
+        result = lookup(act=act, section=section)
+        return _format_tool_output(result)
 
 
 @mcp.resource("themis://disclaimer")
