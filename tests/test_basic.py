@@ -173,3 +173,28 @@ def test_per_tool_ratelimits():
     assert limiter.is_allowed("expensive_tool") is True
     assert limiter.is_allowed("expensive_tool") is True
     assert limiter.is_allowed("expensive_tool") is False
+
+
+def test_citation():
+    """Citation module formats legal citations correctly."""
+    from themis_mcp.citation import (
+        format_citation,
+        format_footnote,
+        format_inline_citation,
+    )
+
+    assert (
+        format_citation("bns", "103")
+        == "Section 103, The Bharatiya Nyaya Sanhita, 2023"
+    )
+    assert format_citation("ipc", "302", short=True) == "IPC s. 302"
+    assert (
+        format_citation("bnss", "Section 63")
+        == "Section 63, The Bharatiya Nagarik Suraksha Sanhita, 2023"
+    )
+
+    assert format_footnote("bns", "103") == "Bharatiya Nyaya Sanhita, 2023, s. 103."
+    assert format_footnote("ipc", "302") == "Indian Penal Code, 1860, s. 302."
+
+    assert format_inline_citation("bns", "103") == "(BNS, s. 103)"
+    assert format_inline_citation("ipc", "302") == "(IPC, s. 302)"
