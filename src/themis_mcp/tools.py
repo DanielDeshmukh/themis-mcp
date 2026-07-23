@@ -6,6 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from themis_mcp.errors import classify_error
+from themis_mcp.ratelimit import rate_limiter
 from themis_mcp.resources import DISCLAIMER
 from themis_mcp.tracing import trace_tool
 
@@ -83,6 +84,14 @@ def ask(
     if _model is None:
         return (
             "Error: THEMIS model not loaded. The server may still be starting up.\n\n"
+            "---\n" + DISCLAIMER
+        )
+
+    if not rate_limiter.is_allowed("themis_ask"):
+        reset_time = rate_limiter.time_until_reset("themis_ask")
+        return (
+            f"Error (RATE_LIMITED): Rate limit exceeded. "
+            f"Try again in {reset_time:.0f} seconds.\n\n"
             "---\n" + DISCLAIMER
         )
 
