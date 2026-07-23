@@ -160,19 +160,10 @@ if "ask" in _enabled_tools:
         temperature: float = 0.7,
         max_tokens: int = 512,
     ) -> str:
-        """Ask a legal question about Indian statutory law.
+        """Answer a question about Indian statutory law (BNS, IPC, BNSS, BSA, RTI, CPA).
 
-        Uses the THEMIS retrieval-grounded model to answer questions about:
-        - Bharatiya Nyaya Sanhita (BNS) 2023
-        - Indian Penal Code (IPC) 1860
-        - Bharatiya Nagarik Suraksha Sanhita (BNSS) 2023
-        - Bharatiya Sakshya Adhiniyam (BSA) 2023
-        - Right to Information Act (RTI) 2005
-        - Consumer Protection Act (CPA) 2019
-        - Constitution of India
-
-        The response includes section/act metadata and grounding status.
-        All responses include a legal disclaimer.
+        Returns section, act, grounding status, and confidence metadata.
+        Use for interpretive questions. For raw text, use themis_lookup.
         """
         result = ask(question, temperature=temperature, max_tokens=max_tokens)
         return _format_tool_output(result)
@@ -182,14 +173,13 @@ if "lookup" in _enabled_tools:
 
     @mcp.tool()
     def themis_lookup(act: str, section: str) -> str:
-        """Look up the raw text of a specific legal section from anchor tables.
+        """Retrieve the exact text of a legal section from anchor tables.
 
-        This performs direct retrieval without LLM inference — fast and deterministic.
-        Use this when you need the exact statutory text rather than an interpretation.
+        Fast, deterministic, no LLM inference. Use for citations or exact wording.
 
         Args:
-            act: Act identifier. One of: bns, bnss, bsa, ipc, rti_2005, consumer_protection_2019
-            section: Section number (e.g. "302", "63", "Section 1")
+            act: bns, bnss, bsa, ipc, rti_2005, or consumer_protection_2019
+            section: Section number (e.g. "302", "63")
 
         Returns:
             The raw section text with a legal disclaimer.
