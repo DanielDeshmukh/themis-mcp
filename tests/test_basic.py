@@ -133,3 +133,23 @@ def test_metrics():
     assert "test_histogram_count 2" in output
     assert "test_histogram_sum 2.0" in output
     assert "themis_uptime_seconds" in output
+
+
+def test_sessions():
+    """Session manager creates, retrieves, and cleans up sessions."""
+    from themis_mcp.sessions import SessionManager
+
+    mgr = SessionManager(timeout=0.1)
+
+    session = mgr.create_session({"user": "test"})
+    assert mgr.active_count == 1
+
+    retrieved = mgr.get_session(session.session_id)
+    assert retrieved is not None
+    assert retrieved.metadata["user"] == "test"
+
+    removed = mgr.remove_session(session.session_id)
+    assert removed is True
+    assert mgr.active_count == 0
+
+    assert mgr.get_session(session.session_id) is None

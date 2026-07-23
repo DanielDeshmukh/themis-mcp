@@ -136,6 +136,7 @@ def _format_tool_output(result: Any) -> str:
 async def health_check(request: Request) -> Response:
     """Health check endpoint for container orchestration and monitoring."""
     from themis_mcp.cache import cache
+    from themis_mcp.sessions import session_manager
     from themis_mcp.tools import _model
 
     status = "healthy" if _model is not None else "starting"
@@ -147,6 +148,7 @@ async def health_check(request: Request) -> Response:
             "service": "themis-mcp",
             "model_loaded": _model is not None,
             "cache": cache.stats,
+            "sessions": session_manager.stats,
         },
         status_code=code,
     )
