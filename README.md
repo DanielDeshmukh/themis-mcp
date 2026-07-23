@@ -97,6 +97,28 @@ Ask legal questions in natural language:
 > Compare IPC Section 302 with BNS Section 101.
 ```
 
+### Step 4: Configure transport (optional)
+
+By default, the server uses stdio transport (for local use with Claude Desktop, opencode, etc.).
+
+For remote/shared deployments, use Streamable HTTP:
+
+```bash
+# Set transport to Streamable HTTP
+export THEMIS_MCP_TRANSPORT=streamable-http
+export THEMIS_MCP_HOST=0.0.0.0
+export THEMIS_MCP_PORT=8000
+
+# Start the server
+themis-mcp
+```
+
+| Environment Variable | Default | Description |
+|---------------------|---------|-------------|
+| `THEMIS_MCP_TRANSPORT` | `stdio` | `stdio` or `streamable-http` |
+| `THEMIS_MCP_HOST` | `0.0.0.0` | Host to bind to (HTTP mode) |
+| `THEMIS_MCP_PORT` | `8000` | Port to listen on (HTTP mode) |
+
 ---
 
 ## Tools
