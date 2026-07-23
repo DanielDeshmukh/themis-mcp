@@ -6,9 +6,9 @@
 [![Test](https://github.com/DanielDeshmukh/themis-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/DanielDeshmukh/themis-mcp/actions/workflows/test.yml)
 [![Lint](https://github.com/DanielDeshmukh/themis-mcp/actions/workflows/lint.yml/badge.svg)](https://github.com/DanielDeshmukh/themis-mcp/actions/workflows/lint.yml)
 
-MCP server for [THEMIS](https://github.com/DanielDeshmukh/themis) — Indian statutory law Q&A via retrieval-grounded LLM.
+MCP server for [THEMIS](https://github.com/DanielDeshmukh/themis) — Indian statutory law Q&A via local LLM.
 
-*"Not retrieval. Not lookup. Baked into weights, grounded by retrieval."*
+*"Baked into weights, grounded by retrieval."*
 
 ---
 
@@ -154,7 +154,7 @@ Retrieve the exact text of a legal section from anchor tables. Fast, determinist
 
 **EXPERIMENTAL:** Map an IPC section to its BNS equivalent (or vice versa).
 
-⚠️ **Warning:** These mappings are AI-generated and UNVERIFIED. Always cross-check with official sources (Ministry of Law and Justice, NCRB).
+⚠️ **Warning:** These mappings are AI-generated and partially verified. Of 207 entries, 27 have been verified against official sources (NCRB, LawSikho). 180 remain unverified. Always cross-check with official sources (Ministry of Law and Justice, NCRB).
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
@@ -258,11 +258,17 @@ Cross-reference sections between old (IPC) and new (BNS) criminal laws:
 # Via tool
 > Map IPC 302 to BNS
 
-# Via prompt
-Use the themis prompt "compare_ipc_bns" with section "302"
+IPC Section 302 corresponds to BNS Section 103.
+
+WARNING: These mappings are UNVERIFIED and AI-generated. Do NOT treat as authoritative legal references.
+
+# Reverse mapping
+> Map BNS Section 103 to IPC
+
+BNS Section 103 corresponds to IPC Section 302.
 ```
 
-200+ known mappings from the Ministry of Law and Justice are included.
+207 mappings included. **27 verified** against NCRB and LawSikho official sources. **180 unverified** — always cross-check with official sources before relying on these in legal proceedings.
 
 ---
 
@@ -394,11 +400,6 @@ as whoever commits robbery shall be punished with rigorous imprisonment
 for a term which may extend to ten years, and shall also be liable to fine.
 
 ---
-Section: 309
-Act: The Bharatiya Nyaya Sanhita, 2023
-Grounded: Yes
-Confidence: 0.92
----
 This is not legal advice. THEMIS provides orientation on Indian statutory law. 
 Consult a qualified lawyer for authoritative guidance.
 ```
@@ -423,14 +424,28 @@ This is not legal advice. THEMIS provides orientation on Indian statutory law.
 User: Map IPC Section 302 to BNS
 
 THEMIS: IPC Section 302 corresponds to BNS Section 103.
+
+WARNING: These mappings are UNVERIFIED and AI-generated. Do NOT treat as authoritative legal references.
 ```
 
-### Using prompts
+### Comparing IPC and BNS sections
+
+```
+User: Use the themis prompt "compare_ipc_bns" with section "302"
+
+THEMIS: IPC Section 302 (Murder) corresponds to BNS Section 103.
+BNS 103 adds mob lynching as an aggravated form with enhanced punishment.
+```
+
+### Finding punishment for an offense
 
 ```
 User: Use the themis prompt "punishment_for" with act "BNS" and offense "theft"
 
-THEMIS: Section 303 of the Bharatiya Nyaya Sanhita, 2023 defines theft...
+THEMIS: Section 303 of the Bharatiya Nyaya Sanhita, 2023 defines theft.
+Whoever commits theft shall be punished with imprisonment of either 
+description for a term which may extend to three years, or with fine, 
+or with both.
 ```
 
 ### Law PDF resources
