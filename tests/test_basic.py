@@ -224,3 +224,11 @@ def test_mapper():
     result = map_section("rti", "6")
     assert result["found"] is False
     assert "Unsupported" in result["error"]
+
+
+def test_sampling_imports():
+    """Sampling module imports correctly."""
+    from themis_mcp.sampling import sample_clarification, sample_follow_up
+
+    assert callable(sample_clarification)
+    assert callable(sample_follow_up)
