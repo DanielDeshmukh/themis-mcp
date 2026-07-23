@@ -153,3 +153,21 @@ def test_sessions():
     assert mgr.active_count == 0
 
     assert mgr.get_session(session.session_id) is None
+
+
+def test_per_tool_ratelimits():
+    """Per-tool rate limits are configured correctly."""
+    from themis_mcp.ratelimit import RateLimiter, RateLimitConfig
+
+    limiter = RateLimiter(default_config=RateLimitConfig(max_calls=10, window_seconds=1))
+    limiter.configure("expensive_tool", RateLimitConfig(max_calls=2, window_seconds=1))
+
+    # Default tool allows 10 calls
+    for _ in range(10):
+        assert limiter.is_allowed("default_tool") is True
+    assert limiter.is_allowed("default_tool") is False
+
+    # Expensive tool allows only 2 calls
+    assert limiter.is_allowed("expensive_tool") is True
+    assert limiter.is_allowed("expensive_tool") is True
+    assert limiter.is_allowed("expensive_tool") is False
