@@ -21,6 +21,9 @@ logger = logging.getLogger("themis_mcp")
 async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
     """Load the THEMIS model once at server startup."""
     from themis_mcp.tools import set_model
+    from themis_mcp.tracing import init_tracer
+
+    init_tracer()
 
     logger.info("Loading THEMIS model...")
     logger.info("This may take a few minutes on first run (downloading ~13GB).")

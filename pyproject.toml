@@ -30,6 +30,10 @@ dev = [
     "ruff>=0.5",
     "mypy>=1.10",
 ]
+otel = [
+    "opentelemetry-api>=1.20",
+    "opentelemetry-sdk>=1.20",
+]
 
 [project.scripts]
 themis-mcp = "themis_mcp.server:main"
