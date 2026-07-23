@@ -34,7 +34,7 @@ UNVERIFIED_WARNING = (
 # Verified mappings between IPC and BNS sections
 # Source: Verified against official sources (NCRB, LawSikho, JuriGram)
 # Only entries confirmed against official sources are included
-KNOWN_MAPPINGS: dict[str, dict[str, str]] = {
+KNOWN_MAPPINGS: dict[str, dict[str, str | None]] = {
     "ipc": {
         # === VERIFIED MAPPINGS (confirmed against official sources) ===
         # Offences Against the Body
