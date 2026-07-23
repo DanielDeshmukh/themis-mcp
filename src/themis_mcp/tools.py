@@ -80,10 +80,13 @@ def ask(
     Returns:
         Formatted response with answer, metadata, and disclaimer.
     """
-    from themis.model import ThemisModel
+    if _model is None:
+        return (
+            "Error: THEMIS model not loaded. The server may still be starting up.\n\n"
+            "---\n" + DISCLAIMER
+        )
 
-    model = ThemisModel.from_pretrained()
-    response = model.ask(
+    response = _model.ask(
         question,
         temperature=temperature,
         max_new_tokens=max_tokens,
