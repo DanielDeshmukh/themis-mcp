@@ -113,3 +113,23 @@ def test_cache():
     cache.clear()
     assert cache.get("test", arg="a") is None
     assert cache.stats["size"] == 0
+
+
+def test_metrics():
+    """Metrics module tracks and formats metrics correctly."""
+    from themis_mcp.metrics import MetricsCollector
+
+    m = MetricsCollector()
+
+    m.inc_counter("test_counter")
+    m.inc_counter("test_counter")
+    m.set_gauge("test_gauge", 42.0)
+    m.observe_histogram("test_histogram", 0.5)
+    m.observe_histogram("test_histogram", 1.5)
+
+    output = m.to_prometheus()
+    assert "test_counter 2.0" in output
+    assert "test_gauge 42.0" in output
+    assert "test_histogram_count 2" in output
+    assert "test_histogram_sum 2.0" in output
+    assert "themis_uptime_seconds" in output
