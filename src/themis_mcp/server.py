@@ -8,6 +8,8 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from mcp.server.fastmcp import FastMCP
+from starlette.requests import Request
+from starlette.responses import JSONResponse, Response
 
 from themis_mcp.resources import get_acts, get_disclaimer
 from themis_mcp.tools import ask, lookup
@@ -77,6 +79,24 @@ mcp = FastMCP(
     ),
     lifespan=lifespan,
 )
+
+
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request: Request) -> Response:
+    """Health check endpoint for container orchestration and monitoring."""
+    from themis_mcp.tools import _model
+
+    status = "healthy" if _model is not None else "starting"
+    code = 200 if _model is not None else 503
+
+    return JSONResponse(
+        {
+            "status": status,
+            "service": "themis-mcp",
+            "model_loaded": _model is not None,
+        },
+        status_code=code,
+    )
 
 
 @mcp.tool()

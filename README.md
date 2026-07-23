@@ -162,6 +162,27 @@ Returns the exact statutory text without LLM interpretation.
 
 ---
 
+## Health Check
+
+When running in Streamable HTTP mode, a `/health` endpoint is available:
+
+```bash
+curl http://localhost:8000/health
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "service": "themis-mcp",
+  "model_loaded": true
+}
+```
+
+Returns `503` if the model is still loading.
+
+---
+
 ## Resources
 
 | URI | Description |
