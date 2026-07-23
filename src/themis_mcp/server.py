@@ -16,6 +16,11 @@ from themis_mcp.tools import ask, lookup
 
 logger = logging.getLogger("themis_mcp")
 
+# Dynamic tool loading: configure via environment variables
+# THEMIS_MCP_TOOLS: comma-separated list of tools to enable (default: "ask,lookup")
+_enabled_tools = os.environ.get("THEMIS_MCP_TOOLS", "ask,lookup").split(",")
+_enabled_tools = [t.strip().lower() for t in _enabled_tools]
+
 
 @asynccontextmanager
 async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
@@ -102,44 +107,48 @@ async def health_check(request: Request) -> Response:
     )
 
 
-@mcp.tool()
-def themis_ask(
-    question: str,
-    temperature: float = 0.7,
-    max_tokens: int = 512,
-) -> str:
-    """Ask a legal question about Indian statutory law.
+if "ask" in _enabled_tools:
 
-    Uses the THEMIS retrieval-grounded model to answer questions about:
-    - Bharatiya Nyaya Sanhita (BNS) 2023
-    - Indian Penal Code (IPC) 1860
-    - Bharatiya Nagarik Suraksha Sanhita (BNSS) 2023
-    - Bharatiya Sakshya Adhiniyam (BSA) 2023
-    - Right to Information Act (RTI) 2005
-    - Consumer Protection Act (CPA) 2019
-    - Constitution of India
+    @mcp.tool()
+    def themis_ask(
+        question: str,
+        temperature: float = 0.7,
+        max_tokens: int = 512,
+    ) -> str:
+        """Ask a legal question about Indian statutory law.
 
-    The response includes section/act metadata and grounding status.
-    All responses include a legal disclaimer.
-    """
-    return ask(question, temperature=temperature, max_tokens=max_tokens)
+        Uses the THEMIS retrieval-grounded model to answer questions about:
+        - Bharatiya Nyaya Sanhita (BNS) 2023
+        - Indian Penal Code (IPC) 1860
+        - Bharatiya Nagarik Suraksha Sanhita (BNSS) 2023
+        - Bharatiya Sakshya Adhiniyam (BSA) 2023
+        - Right to Information Act (RTI) 2005
+        - Consumer Protection Act (CPA) 2019
+        - Constitution of India
+
+        The response includes section/act metadata and grounding status.
+        All responses include a legal disclaimer.
+        """
+        return ask(question, temperature=temperature, max_tokens=max_tokens)
 
 
-@mcp.tool()
-def themis_lookup(act: str, section: str) -> str:
-    """Look up the raw text of a specific legal section from anchor tables.
+if "lookup" in _enabled_tools:
 
-    This performs direct retrieval without LLM inference — fast and deterministic.
-    Use this when you need the exact statutory text rather than an interpretation.
+    @mcp.tool()
+    def themis_lookup(act: str, section: str) -> str:
+        """Look up the raw text of a specific legal section from anchor tables.
 
-    Args:
-        act: Act identifier. One of: bns, bnss, bsa, ipc, rti_2005, consumer_protection_2019
-        section: Section number (e.g. "302", "63", "Section 1")
+        This performs direct retrieval without LLM inference — fast and deterministic.
+        Use this when you need the exact statutory text rather than an interpretation.
 
-    Returns:
-        The raw section text with a legal disclaimer.
-    """
-    return lookup(act=act, section=section)
+        Args:
+            act: Act identifier. One of: bns, bnss, bsa, ipc, rti_2005, consumer_protection_2019
+            section: Section number (e.g. "302", "63", "Section 1")
+
+        Returns:
+            The raw section text with a legal disclaimer.
+        """
+        return lookup(act=act, section=section)
 
 
 @mcp.resource("themis://disclaimer")
