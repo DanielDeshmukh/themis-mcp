@@ -174,10 +174,13 @@ def main() -> None:
     transport = os.environ.get("THEMIS_MCP_TRANSPORT", "stdio")
 
     if transport == "streamable-http":
+        import uvicorn
+
         host = os.environ.get("THEMIS_MCP_HOST", "0.0.0.0")
         port = int(os.environ.get("THEMIS_MCP_PORT", "8000"))
         logger.info(f"Starting THEMIS MCP on {host}:{port} (Streamable HTTP)")
-        mcp.run(transport="streamable-http", host=host, port=port)
+        app = mcp.streamable_http_app()
+        uvicorn.run(app, host=host, port=port)
     else:
         logger.info("Starting THEMIS MCP (stdio)")
         mcp.run(transport="stdio")
