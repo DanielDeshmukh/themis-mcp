@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from themis_mcp.cache import cache
 from themis_mcp.errors import classify_error
 from themis_mcp.ratelimit import rate_limiter
 from themis_mcp.resources import DISCLAIMER
@@ -99,6 +100,18 @@ def ask(
             error_class="RATE_LIMITED",
         )
 
+    # Check cache (only for deterministic queries: temperature <= 0.1)
+    if temperature <= 0.1:
+        cached = cache.get(
+            "themis_ask",
+            question=question,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+        if cached is not None:
+            logger.info(f"Cache hit for question: {question[:50]}...")
+            return cached  # type: ignore[no-any-return]
+
     with trace_tool("themis_ask", question=question[:100]):
         try:
             response = _model.ask(
@@ -115,7 +128,7 @@ def ask(
                 error_class=error.error_class.value,
             )
 
-    return ToolResult(
+    result = ToolResult(
         text=response.text,
         grounded=response.grounded,
         section=getattr(response, "section", None),
@@ -123,6 +136,18 @@ def ask(
         confidence=getattr(response, "confidence", None),
         warning=getattr(response, "warning", None),
     )
+
+    # Cache result (only for deterministic queries)
+    if temperature <= 0.1:
+        cache.set(
+            "themis_ask",
+            result,
+            question=question,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+
+    return result
 
 
 def _get_section_index() -> Any:
