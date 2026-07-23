@@ -32,6 +32,7 @@ mcp = FastMCP(
         "and other Indian statutes. Use the 'lookup' tool to retrieve raw section "
         "text directly from anchor tables without LLM inference."
     ),
+    lifespan=lifespan,
 )
 
 
