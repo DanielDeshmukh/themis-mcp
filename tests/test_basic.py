@@ -7,7 +7,7 @@ def test_import():
     """Package imports successfully."""
     import themis_mcp
 
-    assert themis_mcp.__version__ == "0.1.0"
+    assert themis_mcp.__version__ == "1.0.0"
 
 
 def test_disclaimer():

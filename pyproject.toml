@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "themis-mcp"
-version = "0.1.0"
+version = "1.0.0"
 description = "MCP server for THEMIS — Indian statutory law Q&A via local LLM (BNS, IPC, BNSS, BSA, RTI)"
 readme = "README.md"
 license = "MIT"
