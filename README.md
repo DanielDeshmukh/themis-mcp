@@ -3,6 +3,8 @@
 [![PyPI version](https://img.shields.io/pypi/v/themis-mcp.svg)](https://pypi.org/project/themis-mcp/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-brightgreen.svg)](https://www.python.org/downloads/)
+[![Test](https://github.com/DanielDeshmukh/themis-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/DanielDeshmukh/themis-mcp/actions/workflows/test.yml)
+[![Lint](https://github.com/DanielDeshmukh/themis-mcp/actions/workflows/lint.yml/badge.svg)](https://github.com/DanielDeshmukh/themis-mcp/actions/workflows/lint.yml)
 
 MCP server for [THEMIS](https://github.com/DanielDeshmukh/themis) — Indian statutory law Q&A via retrieval-grounded LLM.
 
