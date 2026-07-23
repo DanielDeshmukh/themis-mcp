@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import csv
-import importlib
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from themis_mcp.resources import DISCLAIMER
@@ -16,6 +13,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("themis_mcp")
 
 _model: Any = None
+_section_index: Any = None
 
 
 def set_model(model: Any) -> None:
