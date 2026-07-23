@@ -198,3 +198,29 @@ def test_citation():
 
     assert format_inline_citation("bns", "103") == "(BNS, s. 103)"
     assert format_inline_citation("ipc", "302") == "(IPC, s. 302)"
+
+
+def test_mapper():
+    """Mapper module maps IPC ↔ BNS sections correctly."""
+    from themis_mcp.mapper import map_section
+
+    # Known mapping: IPC 302 → BNS 103
+    result = map_section("ipc", "302")
+    assert result["found"] is True
+    assert result["target_act"] == "BNS"
+    assert result["target_section"] == "103"
+
+    # Known mapping: BNS 103 → IPC 302
+    result = map_section("bns", "103")
+    assert result["found"] is True
+    assert result["target_act"] == "IPC"
+    assert result["target_section"] == "302"
+
+    # Unknown section
+    result = map_section("ipc", "99999")
+    assert result["found"] is False
+
+    # Unsupported act
+    result = map_section("rti", "6")
+    assert result["found"] is False
+    assert "Unsupported" in result["error"]

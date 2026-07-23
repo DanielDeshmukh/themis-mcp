@@ -209,6 +209,33 @@ if "lookup" in _enabled_tools:
         return _format_tool_output(result)
 
 
+@mcp.tool()
+def themis_map_section(source_act: str, section: str, target_act: str = "") -> str:
+    """Map an IPC section to its BNS equivalent (or vice versa).
+
+    Uses known mappings from the Ministry of Law and Justice.
+    For unmapped sections, use themis_ask for AI-assisted cross-referencing.
+
+    Args:
+        source_act: Source act: "ipc" or "bns"
+        section: Section number (e.g. "302", "103")
+        target_act: Target act: "bns" or "ipc" (optional, auto-detected)
+    """
+    from themis_mcp.mapper import map_section
+
+    target = target_act if target_act else None
+    result = map_section(source_act, section, target)
+
+    if result["found"]:
+        return (
+            f"{result['source_act']} Section {result['source_section']} "
+            f"corresponds to {result['target_act']} Section {result['target_section']}."
+        )
+
+    error_msg: str = result.get("error", "Mapping not found.")
+    return error_msg
+
+
 @mcp.resource("themis://disclaimer")
 def resource_disclaimer() -> str:
     """Legal disclaimer for THEMIS MCP responses."""
