@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any, Iterator
+from typing import Any
 
 logger = logging.getLogger("themis_mcp")
 
@@ -63,10 +64,14 @@ def trace_tool(tool_name: str, **attributes: Any) -> Iterator[None]:
     ) as span:
         try:
             yield
-            span.set_status(__import__("opentelemetry.trace", fromlist=["StatusCode"]).StatusCode.OK)
+            span.set_status(
+                __import__("opentelemetry.trace", fromlist=["StatusCode"]).StatusCode.OK
+            )
         except Exception as e:
             span.set_status(
-                __import__("opentelemetry.trace", fromlist=["StatusCode"]).StatusCode.ERROR,
+                __import__(
+                    "opentelemetry.trace", fromlist=["StatusCode"]
+                ).StatusCode.ERROR,
                 str(e),
             )
             raise

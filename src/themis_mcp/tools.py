@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 
 from themis_mcp.errors import classify_error
 from themis_mcp.resources import DISCLAIMER
+from themis_mcp.tracing import trace_tool
 
 if TYPE_CHECKING:
     pass
@@ -85,15 +86,16 @@ def ask(
             "---\n" + DISCLAIMER
         )
 
-    try:
-        response = _model.ask(
-            question,
-            temperature=temperature,
-            max_new_tokens=max_tokens,
-        )
-    except Exception as e:
-        error = classify_error(e)
-        return f"{error.to_text()}\n\n---\n" + DISCLAIMER
+    with trace_tool("themis_ask", question=question[:100]):
+        try:
+            response = _model.ask(
+                question,
+                temperature=temperature,
+                max_new_tokens=max_tokens,
+            )
+        except Exception as e:
+            error = classify_error(e)
+            return f"{error.to_text()}\n\n---\n" + DISCLAIMER
 
     return _format_response(
         text=response.text,
@@ -135,12 +137,13 @@ def lookup(act: str, section: str) -> str:
     """
     section_clean = section.replace("Section ", "").replace("section ", "").strip()
 
-    try:
-        index = _get_section_index()
-    except RuntimeError as e:
-        return f"Error: {e}\n\n---\n{DISCLAIMER}"
+    with trace_tool("themis_lookup", act=act, section=section_clean):
+        try:
+            index = _get_section_index()
+        except RuntimeError as e:
+            return f"Error: {e}\n\n---\n{DISCLAIMER}"
 
-    result = index.lookup(section_clean, act_hint=act)
+        result = index.lookup(section_clean, act_hint=act)
 
     if not result.found:
         return f"Section {section_clean} not found in '{act}'.\n\n---\n{DISCLAIMER}"
