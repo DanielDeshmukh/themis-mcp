@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-import csv
-import importlib
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from themis_mcp.resources import DISCLAIMER
@@ -16,6 +13,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger("themis_mcp")
 
 _model: Any = None
+_section_index: Any = None
 
 
 def set_model(model: Any) -> None:
@@ -115,35 +113,20 @@ def ask(
     )
 
 
-def _load_anchor_table(act: str) -> dict[str, str]:
-    """Load an anchor table CSV from the themis package data.
+def _get_section_index() -> Any:
+    """Get or initialize the SectionIndex from themis.grounding."""
+    global _section_index
+    if _section_index is None:
+        try:
+            from themis.grounding import SectionIndex
 
-    Returns a dict mapping section number -> section text.
-    """
-    try:
-        themis_pkg = importlib.import_module("themis")
-        pkg_dir = Path(themis_pkg.__file__).parent
-    except (ImportError, AttributeError) as err:
-        raise RuntimeError(
-            "Cannot locate the themis package. Install it with: pip install themis-llm"
-        ) from err
-
-    anchor_path = pkg_dir / "data" / "anchors" / f"{act}.csv"
-    if not anchor_path.exists():
-        raise FileNotFoundError(
-            f"Anchor table not found for act '{act}'. Expected: {anchor_path}"
-        )
-
-    table: dict[str, str] = {}
-    with open(anchor_path, encoding="utf-8") as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            section_num = row.get("section") or row.get("section_number") or ""
-            text = row.get("text") or row.get("section_text") or ""
-            if section_num:
-                table[section_num.strip()] = text.strip()
-
-    return table
+            _section_index = SectionIndex()
+        except ImportError as err:
+            raise RuntimeError(
+                "Cannot import SectionIndex from themis. "
+                "Install it with: pip install themis-llm"
+            ) from err
+    return _section_index
 
 
 def lookup(act: str, section: str) -> str:
@@ -161,19 +144,15 @@ def lookup(act: str, section: str) -> str:
     section_clean = section.replace("Section ", "").replace("section ", "").strip()
 
     try:
-        table = _load_anchor_table(act)
-    except (RuntimeError, FileNotFoundError) as e:
+        index = _get_section_index()
+    except RuntimeError as e:
         return f"Error: {e}\n\n---\n{DISCLAIMER}"
 
-    text = table.get(section_clean)
+    result = index.lookup(section_clean, act_hint=act)
 
-    if not text:
-        available = sorted(table.keys(), key=lambda x: int(x) if x.isdigit() else 0)
-        return (
-            f"Section {section_clean} not found in '{act}'. "
-            f"Available sections: {', '.join(available[:20])}"
-            f"{'...' if len(available) > 20 else ''}\n\n---\n{DISCLAIMER}"
-        )
+    if not result.found:
+        return f"Section {section_clean} not found in '{act}'.\n\n---\n{DISCLAIMER}"
 
-    header = f"Section {section_clean} — {act.upper()}"
+    header = f"Section {result.section_number} — {result.act_name}"
+    text = result.text or "No text available."
     return f"{header}\n\n{text}\n\n---\n{DISCLAIMER}"
