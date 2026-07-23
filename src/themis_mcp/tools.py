@@ -32,13 +32,10 @@ def set_model(model: Any) -> None:
 
 def _format_response(
     text: str,
-    grounded: bool,
-    section: str | None,
-    act: str | None,
-    confidence: float | None,
-    warning: str | None,
+    section: str | None = None,
+    act: str | None = None,
 ) -> str:
-    """Format a model response with metadata and disclaimer."""
+    """Format a model response with disclaimer."""
     parts = [text]
 
     meta = []
@@ -46,14 +43,6 @@ def _format_response(
         meta.append(f"Section: {section}")
     if act:
         meta.append(f"Act: {act}")
-    if confidence is not None:
-        meta.append(f"Confidence: {confidence:.2f}")
-    if grounded:
-        meta.append("Grounded: Yes")
-    else:
-        meta.append("Grounded: No")
-    if warning:
-        meta.append(f"Warning: {warning}")
 
     if meta:
         parts.append("")
@@ -95,7 +84,6 @@ def ask(
         )
         return ToolResult(
             text="THEMIS model not loaded. The server may still be starting up.",
-            grounded=False,
             error=True,
             error_class="SERVER_ERROR",
         )
@@ -107,7 +95,6 @@ def ask(
         )
         return ToolResult(
             text=f"Rate limit exceeded. Try again in {reset_time:.0f} seconds.",
-            grounded=False,
             error=True,
             error_class="RATE_LIMITED",
         )
@@ -132,7 +119,7 @@ def ask(
 
     with trace_tool("themis_ask", question=question[:100]):
         try:
-            response = _model.ask(
+            response = _model.generate(
                 question,
                 temperature=temperature,
                 max_new_tokens=max_tokens,
@@ -150,18 +137,12 @@ def ask(
             )
             return ToolResult(
                 text=error.message,
-                grounded=False,
                 error=True,
                 error_class=error.error_class.value,
             )
 
     result = ToolResult(
-        text=response.text,
-        grounded=response.grounded,
-        section=getattr(response, "section", None),
-        act=getattr(response, "act", None),
-        confidence=getattr(response, "confidence", None),
-        warning=getattr(response, "warning", None),
+        text=response.response,
     )
 
     metrics.observe_histogram(
@@ -189,10 +170,10 @@ def _get_section_index() -> Any:
             from themis.grounding import SectionIndex
 
             _section_index = SectionIndex()
-        except ImportError as err:
+        except (ImportError, ModuleNotFoundError) as err:
             raise RuntimeError(
-                "Cannot import SectionIndex from themis. "
-                "Install it with: pip install themis-llm"
+                "SectionIndex not available in this version of themis-llm. "
+                "The lookup tool requires themis-llm with grounding support."
             ) from err
     return _section_index
 
@@ -231,7 +212,22 @@ def lookup(act: str, section: str) -> LookupResult:
                 text=str(e),
             )
 
-        result = index.lookup(section_clean, act_hint=act)
+        try:
+            result = index.lookup(section_clean, act_hint=act)
+        except AttributeError:
+            metrics.inc_counter(
+                "themis_tool_errors_total",
+                {"tool": "themis_lookup", "error": "api_mismatch"},
+            )
+            metrics.observe_histogram(
+                "themis_tool_duration_seconds",
+                time.monotonic() - start,
+                {"tool": "themis_lookup"},
+            )
+            return LookupResult(
+                found=False,
+                text="SectionIndex.lookup() not available in this version of themis-llm.",
+            )
 
     metrics.observe_histogram(
         "themis_tool_duration_seconds",

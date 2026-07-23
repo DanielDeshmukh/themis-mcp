@@ -137,11 +137,7 @@ Answer a question about Indian statutory law (BNS, IPC, BNSS, BSA, RTI, CPA).
 **Example response:**
 ```json
 {
-  "text": "Section 103 of the Bharatiya Nyaya Sanhita, 2023 defines murder as...",
-  "grounded": true,
-  "section": "103",
-  "act": "The Bharatiya Nyaya Sanhita, 2023",
-  "confidence": 0.95
+  "text": "Section 103 of the Bharatiya Nyaya Sanhita, 2023 defines murder as..."
 }
 ```
 
@@ -156,7 +152,9 @@ Retrieve the exact text of a legal section from anchor tables. Fast, determinist
 
 ### `themis_map_section`
 
-Map an IPC section to its BNS equivalent (or vice versa).
+**EXPERIMENTAL:** Map an IPC section to its BNS equivalent (or vice versa).
+
+⚠️ **Warning:** These mappings are AI-generated and UNVERIFIED. Always cross-check with official sources (Ministry of Law and Justice, NCRB).
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
@@ -169,6 +167,8 @@ Map an IPC section to its BNS equivalent (or vice versa).
 > Map IPC Section 302 to BNS
 
 IPC Section 302 corresponds to BNS Section 103.
+
+WARNING: These mappings are UNVERIFIED and AI-generated. Do NOT treat as authoritative legal references.
 ```
 
 ---

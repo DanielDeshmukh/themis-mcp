@@ -11,11 +11,6 @@ class ToolResult:
     """Structured tool response with text and metadata."""
 
     text: str
-    grounded: bool
-    section: str | None = None
-    act: str | None = None
-    confidence: float | None = None
-    warning: str | None = None
     error: bool = False
     error_class: str | None = None
 

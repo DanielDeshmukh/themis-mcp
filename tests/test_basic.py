@@ -67,16 +67,9 @@ def test_structured_output():
 
     result = ToolResult(
         text="Section 103 defines murder.",
-        grounded=True,
-        section="103",
-        act="BNS",
-        confidence=0.95,
     )
     d = result.to_dict()
     assert d["text"] == "Section 103 defines murder."
-    assert d["grounded"] is True
-    assert d["section"] == "103"
-    assert "warning" not in d
 
     j = result.to_json()
     assert '"text": "Section 103 defines murder."' in j
