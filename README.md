@@ -196,6 +196,34 @@ imprisonment, plus fine.
 
 ---
 
+## Troubleshooting
+
+### "No GPU available or CUDA not configured"
+
+THEMIS requires a CUDA-capable GPU with ~13GB VRAM.
+
+1. Verify CUDA is installed: `nvidia-smi`
+2. Install CUDA: https://developer.nvidia.com/cuda-downloads
+3. Ensure PyTorch sees CUDA: `python -c "import torch; print(torch.cuda.is_available())"`
+
+### "Insufficient GPU memory"
+
+Close other GPU-intensive applications (browser tabs with hardware acceleration, other ML models, etc.).
+
+### "Failed to download model weights"
+
+Check your internet connection. The model weights (~13GB) are downloaded from HuggingFace on first run.
+
+### "THEMIS model not loaded"
+
+The server may still be starting up. Wait a few seconds and try again. If the error persists, check the server logs.
+
+### Model loads slowly on first run
+
+First run downloads ~13GB of model weights from HuggingFace. Subsequent runs use the cached weights.
+
+---
+
 ## Relationship to THEMIS
 
 | | themis-mcp | themis-llm |
