@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from enum import StrEnum
+from typing import Any
 
 
 class ErrorClass(StrEnum):
@@ -38,7 +39,7 @@ class ThemisError:
 
     def to_json(self) -> str:
         """Serialize error to JSON string."""
-        data = {
+        data: dict[str, Any] = {
             "error": True,
             "error_class": self.error_class.value,
             "message": self.message,
