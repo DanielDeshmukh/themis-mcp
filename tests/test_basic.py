@@ -59,3 +59,37 @@ def test_prompts():
     ]:
         assert isinstance(messages, list)
         assert messages[0].role == "user"
+
+
+def test_structured_output():
+    """Structured output types serialize correctly."""
+    from themis_mcp.structured import LookupResult, ToolResult
+
+    result = ToolResult(
+        text="Section 103 defines murder.",
+        grounded=True,
+        section="103",
+        act="BNS",
+        confidence=0.95,
+    )
+    d = result.to_dict()
+    assert d["text"] == "Section 103 defines murder."
+    assert d["grounded"] is True
+    assert d["section"] == "103"
+    assert "warning" not in d
+
+    j = result.to_json()
+    assert '"text": "Section 103 defines murder."' in j
+
+    lookup = LookupResult(
+        found=True,
+        section_number="103",
+        act_name="BNS",
+        text="103. Murder...",
+    )
+    ld = lookup.to_dict()
+    assert ld["found"] is True
+    assert ld["section_number"] == "103"
+
+    not_found = LookupResult(found=False, text="Not found.")
+    assert not_found.to_dict()["found"] is False
