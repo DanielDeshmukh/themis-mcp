@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import json
-from enum import Enum
+from enum import StrEnum
 
 
-class ErrorClass(str, Enum):
+class ErrorClass(StrEnum):
     """Error classification for MCP tool responses."""
 
     CLIENT_ERROR = "CLIENT_ERROR"
