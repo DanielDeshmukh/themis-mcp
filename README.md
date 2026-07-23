@@ -126,7 +126,7 @@ themis-mcp
 
 ### `themis_ask`
 
-Ask a legal question about Indian statutory law using the THEMIS retrieval-grounded model.
+Answer a question about Indian statutory law (BNS, IPC, BNSS, BSA, RTI, CPA).
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
@@ -147,19 +147,29 @@ Ask a legal question about Indian statutory law using the THEMIS retrieval-groun
 
 ### `themis_lookup`
 
-Look up raw section text directly from anchor tables (no LLM inference — fast and deterministic).
+Retrieve the exact text of a legal section from anchor tables. Fast, deterministic, no LLM inference.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `act` | string | One of: `bns`, `bnss`, `bsa`, `ipc`, `rti_2005`, `consumer_protection_2019` |
-| `section` | string | Section number (e.g. `"302"`, `"63"`, `"Section 1"`) |
+| `section` | string | Section number (e.g. `"302"`, `"63"`) |
+
+### `themis_map_section`
+
+Map an IPC section to its BNS equivalent (or vice versa).
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `source_act` | string | `"ipc"` or `"bns"` |
+| `section` | string | Section number (e.g. `"302"`, `"103"`) |
+| `target_act` | string | `"bns"` or `"ipc"` (optional, auto-detected) |
 
 **Example:**
 ```
-> Lookup BNS Section 103
-```
+> Map IPC Section 302 to BNS
 
-Returns the exact statutory text without LLM interpretation.
+IPC Section 302 corresponds to BNS Section 103.
+```
 
 ---
 
@@ -190,6 +200,8 @@ Returns `503` if the model is still loading.
 |-----|-------------|
 | `themis://disclaimer` | Legal disclaimer (appended to all tool responses) |
 | `themis://acts` | List of supported acts with section counts |
+| `themis://laws/pdf` | Official PDF links for all supported statutes |
+| `themis://laws/{act}/pdf` | Official PDF link for a specific statute |
 
 ---
 
@@ -209,6 +221,102 @@ Pre-built legal query templates for common tasks:
 **Usage in MCP clients:**
 ```
 Use the themis prompt "compare_ipc_bns" with section "302"
+```
+
+---
+
+## Caching
+
+Deterministic queries (temperature ≤ 0.1) are cached for 5 minutes (128 entries max).
+
+Cache stats are included in the `/health` endpoint response:
+```json
+{
+  "cache": {
+    "size": 12,
+    "max_size": 128,
+    "hits": 45,
+    "misses": 23,
+    "hit_rate": "66.2%"
+  }
+}
+```
+
+---
+
+## Sampling
+
+When the client supports MCP sampling, the server can request AI-assisted clarification for ambiguous questions. This is opt-in and gracefully degrades if the client doesn't support it.
+
+---
+
+## IPC ↔ BNS Mapper
+
+Cross-reference sections between old (IPC) and new (BNS) criminal laws:
+
+```bash
+# Via tool
+> Map IPC 302 to BNS
+
+# Via prompt
+Use the themis prompt "compare_ipc_bns" with section "302"
+```
+
+200+ known mappings from the Ministry of Law and Justice are included.
+
+---
+
+## Legal Citations
+
+Format citations in multiple styles:
+
+```python
+from themis_mcp.citation import format_citation, format_inline_citation, format_footnote
+
+format_citation("bns", "103")
+# 'Section 103, The Bharatiya Nyaya Sanhita, 2023'
+
+format_citation("ipc", "302", short=True)
+# 'IPC s. 302'
+
+format_inline_citation("bns", "103")
+# '(BNS, s. 103)'
+
+format_footnote("bns", "103")
+# 'Bharatiya Nyaya Sanhita, 2023, s. 103.'
+```
+
+---
+
+## Prometheus Metrics
+
+When running in HTTP mode, metrics are available at `/metrics`:
+
+```bash
+curl http://localhost:8000/metrics
+```
+
+**Available metrics:**
+- `themis_tool_calls_total` — Total tool calls (labels: `tool`)
+- `themis_tool_errors_total` — Tool errors (labels: `tool`, `error`)
+- `themis_tool_duration_seconds` — Tool call duration histogram
+- `themis_cache_hits_total` — Cache hits
+- `themis_uptime_seconds` — Server uptime
+
+---
+
+## Session Management
+
+HTTP mode tracks active sessions with automatic timeout (1 hour default).
+
+Session stats are included in `/health`:
+```json
+{
+  "sessions": {
+    "active_sessions": 3,
+    "timeout_seconds": 3600
+  }
+}
 ```
 
 ---
@@ -309,14 +417,33 @@ for life, and shall also be liable to fine.
 This is not legal advice. THEMIS provides orientation on Indian statutory law.
 ```
 
-### IPC to BNS comparison
+### IPC to BNS mapping
 
 ```
-User: What section in BNS corresponds to IPC Section 302?
+User: Map IPC Section 302 to BNS
 
-THEMIS: IPC Section 302 (Murder) corresponds to BNS Section 103.
-Both provisions deal with the punishment for murder — death or life 
-imprisonment, plus fine.
+THEMIS: IPC Section 302 corresponds to BNS Section 103.
+```
+
+### Using prompts
+
+```
+User: Use the themis prompt "punishment_for" with act "BNS" and offense "theft"
+
+THEMIS: Section 303 of the Bharatiya Nyaya Sanhita, 2023 defines theft...
+```
+
+### Law PDF resources
+
+```
+User: Get the PDF link for BNS
+
+THEMIS: {
+  "title": "Bharatiya Nyaya Sanhita, 2023",
+  "pdf_url": "https://www.indiacode.nic.in/bitstream/...",
+  "date_enacted": "2023-12-25",
+  "effective_date": "2024-07-01"
+}
 ```
 
 ---
