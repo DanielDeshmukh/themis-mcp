@@ -20,6 +20,7 @@ async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
     from themis_mcp.tools import set_model
 
     logger.info("Loading THEMIS model...")
+    logger.info("This may take a few minutes on first run (downloading ~13GB).")
 
     try:
         from themis.model import ThemisModel
