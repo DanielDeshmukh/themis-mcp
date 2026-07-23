@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
+from themis_mcp.errors import classify_error
 from themis_mcp.resources import DISCLAIMER
 
 if TYPE_CHECKING:
@@ -91,17 +92,8 @@ def ask(
             max_new_tokens=max_tokens,
         )
     except Exception as e:
-        error_msg = str(e).lower()
-        if "memory" in error_msg or "oom" in error_msg:
-            help_msg = (
-                "Insufficient GPU memory for inference. "
-                "Try reducing max_tokens or close other GPU applications.\n"
-                f"Details: {e}"
-            )
-        else:
-            help_msg = f"Inference failed: {e}"
-
-        return f"Error: {help_msg}\n\n---\n" + DISCLAIMER
+        error = classify_error(e)
+        return f"{error.to_text()}\n\n---\n" + DISCLAIMER
 
     return _format_response(
         text=response.text,
