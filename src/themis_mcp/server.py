@@ -51,7 +51,9 @@ async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
                 "Close other GPU-intensive applications and try again.\n"
                 f"Details: {e}"
             )
-        elif "download" in error_msg or "connect" in error_msg or "network" in error_msg:
+        elif (
+            "download" in error_msg or "connect" in error_msg or "network" in error_msg
+        ):
             help_msg = (
                 "Failed to download model weights. Check your internet connection.\n"
                 f"Details: {e}"
