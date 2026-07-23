@@ -132,8 +132,23 @@ def resource_acts() -> str:
 
 
 def main() -> None:
-    """Entry point for the MCP server."""
-    mcp.run(transport="stdio")
+    """Entry point for the MCP server.
+
+    Transport is configured via environment variables:
+        THEMIS_MCP_TRANSPORT: "stdio" (default) or "streamable-http"
+        THEMIS_MCP_HOST: Host to bind to (default: "0.0.0.0")
+        THEMIS_MCP_PORT: Port to listen on (default: 8000)
+    """
+    transport = os.environ.get("THEMIS_MCP_TRANSPORT", "stdio")
+
+    if transport == "streamable-http":
+        host = os.environ.get("THEMIS_MCP_HOST", "0.0.0.0")
+        port = int(os.environ.get("THEMIS_MCP_PORT", "8000"))
+        logger.info(f"Starting THEMIS MCP on {host}:{port} (Streamable HTTP)")
+        mcp.run(transport="streamable-http", host=host, port=port)
+    else:
+        logger.info("Starting THEMIS MCP (stdio)")
+        mcp.run(transport="stdio")
 
 
 if __name__ == "__main__":
