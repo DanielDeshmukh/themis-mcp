@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 from mcp.server.fastmcp import FastMCP
 
@@ -10,6 +12,17 @@ from themis_mcp.resources import get_acts, get_disclaimer
 from themis_mcp.tools import ask, lookup
 
 logger = logging.getLogger("themis_mcp")
+
+
+@asynccontextmanager
+async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
+    """Load the THEMIS model once at server startup."""
+    logger.info("Loading THEMIS model...")
+    from themis.model import ThemisModel
+
+    model = ThemisModel.from_pretrained()
+    logger.info("THEMIS model loaded successfully.")
+    yield {"model": model}
 
 mcp = FastMCP(
     "themis-mcp",
