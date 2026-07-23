@@ -4,13 +4,25 @@ from __future__ import annotations
 
 import csv
 import importlib
+import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from themis_mcp.resources import DISCLAIMER
 
 if TYPE_CHECKING:
     pass
+
+logger = logging.getLogger("themis_mcp")
+
+_model: Any = None
+
+
+def set_model(model: Any) -> None:
+    """Store the loaded THEMIS model for tool use."""
+    global _model
+    _model = model
+    logger.info("Model stored for MCP tools.")
 
 
 def _format_response(
@@ -68,10 +80,13 @@ def ask(
     Returns:
         Formatted response with answer, metadata, and disclaimer.
     """
-    from themis.model import ThemisModel
+    if _model is None:
+        return (
+            "Error: THEMIS model not loaded. The server may still be starting up.\n\n"
+            "---\n" + DISCLAIMER
+        )
 
-    model = ThemisModel.from_pretrained()
-    response = model.ask(
+    response = _model.ask(
         question,
         temperature=temperature,
         max_new_tokens=max_tokens,

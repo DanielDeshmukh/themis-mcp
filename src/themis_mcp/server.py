@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 from mcp.server.fastmcp import FastMCP
 
@@ -10,6 +12,21 @@ from themis_mcp.resources import get_acts, get_disclaimer
 from themis_mcp.tools import ask, lookup
 
 logger = logging.getLogger("themis_mcp")
+
+
+@asynccontextmanager
+async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
+    """Load the THEMIS model once at server startup."""
+    from themis_mcp.tools import set_model
+
+    logger.info("Loading THEMIS model...")
+    from themis.model import ThemisModel
+
+    model = ThemisModel.from_pretrained()
+    set_model(model)
+    logger.info("THEMIS model loaded successfully.")
+    yield {"model": model}
+
 
 mcp = FastMCP(
     "themis-mcp",
@@ -19,6 +36,7 @@ mcp = FastMCP(
         "and other Indian statutes. Use the 'lookup' tool to retrieve raw section "
         "text directly from anchor tables without LLM inference."
     ),
+    lifespan=lifespan,
 )
 
 
