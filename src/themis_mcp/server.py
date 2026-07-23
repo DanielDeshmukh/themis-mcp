@@ -248,6 +248,26 @@ def resource_acts() -> str:
     return get_acts()
 
 
+@mcp.resource("themis://laws/pdf")
+def resource_law_pdfs() -> str:
+    """Official PDF links for all supported Indian statutes."""
+    from themis_mcp.resources import get_law_pdfs
+
+    return get_law_pdfs()
+
+
+@mcp.resource("themis://laws/{act}/pdf")
+def resource_law_pdf(act: str) -> str:
+    """Official PDF link for a specific Indian statute.
+
+    Args:
+        act: Act identifier (e.g. "bns", "ipc", "bnss")
+    """
+    from themis_mcp.resources import get_law_pdf
+
+    return get_law_pdf(act)
+
+
 @mcp.prompt()
 def compare_ipc_bns(section: str) -> list:
     """Compare an IPC section with its BNS equivalent.
