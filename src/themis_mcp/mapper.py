@@ -1,4 +1,14 @@
-"""IPC ↔ BNS section mapper for cross-referencing old and new laws."""
+"""IPC ↔ BNS section mapper for cross-referencing old and new laws.
+
+WARNING: This mapping table is UNVERIFIED and AI-generated.
+The mappings should NOT be treated as authoritative legal references.
+Always cross-check with official sources:
+- Ministry of Law and Justice notifications
+- National Crime Records Bureau (NCRB): https://www.ncrb.gov.in/uploads/SankalanPortal/SectionTableBNS.html
+- Official BNS/BNSS/BSA gazette notifications
+
+This feature is marked as EXPERIMENTAL and may contain errors.
+"""
 
 from __future__ import annotations
 
@@ -7,9 +17,16 @@ from typing import Any
 
 logger = logging.getLogger("themis_mcp")
 
+# This warning is appended to all mapper tool responses
+UNVERIFIED_WARNING = (
+    "WARNING: These mappings are UNVERIFIED and AI-generated. "
+    "Do NOT treat as authoritative legal references. "
+    "Always cross-check with official sources (Ministry of Law and Justice, NCRB)."
+)
+
 
 # Known mappings between IPC and BNS sections
-# Source: Ministry of Law and Justice, Government of India
+# Source: AI-generated — NOT verified against official sources
 KNOWN_MAPPINGS: dict[str, dict[str, str]] = {
     "ipc": {
         "120a": "bnss:183",
@@ -252,6 +269,7 @@ def map_section(
                 "target_act": target_act_name.upper(),
                 "target_section": target_section,
                 "mapping_type": "known",
+                "warning": UNVERIFIED_WARNING,
             }
 
     # Check reverse mappings (BNS → IPC)
@@ -266,6 +284,7 @@ def map_section(
                 "target_act": target_act_name.upper(),
                 "target_section": target_section,
                 "mapping_type": "known",
+                "warning": UNVERIFIED_WARNING,
             }
 
     return {
@@ -274,4 +293,5 @@ def map_section(
         "source_section": section_clean,
         "target_act": target.upper(),
         "error": f"No known mapping for {source_act.upper()} Section {section_clean}. Use themis_ask for AI-assisted cross-referencing.",
+        "warning": UNVERIFIED_WARNING,
     }

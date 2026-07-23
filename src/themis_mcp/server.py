@@ -35,12 +35,13 @@ async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
     logger.info("This may take a few minutes on first run (downloading ~13GB).")
 
     try:
-        from themis.model import ThemisModel
+        from themis import get_inference
 
-        model = ThemisModel.from_pretrained()
-        set_model(model)
+        inference = get_inference()
+        inference.load_model()
+        set_model(inference)
         logger.info("THEMIS model loaded successfully.")
-        yield {"model": model}
+        yield {"model": inference}
     except ImportError as e:
         error_msg = (
             "Failed to import themis package. "
@@ -97,19 +98,7 @@ def _format_tool_output(result: Any) -> str:
 
     if isinstance(result, ToolResult):
         parts = [result.text]
-        meta = []
-        if result.section:
-            meta.append(f"Section: {result.section}")
-        if result.act:
-            meta.append(f"Act: {result.act}")
-        if result.confidence is not None:
-            meta.append(f"Confidence: {result.confidence:.2f}")
-        if result.grounded:
-            meta.append("Grounded: Yes")
-        else:
-            meta.append("Grounded: No")
-        if result.warning:
-            meta.append(f"Warning: {result.warning}")
+        meta: list[str] = []
         if result.error:
             meta.insert(0, f"Error ({result.error_class}):")
         if meta:
@@ -213,7 +202,8 @@ if "lookup" in _enabled_tools:
 def themis_map_section(source_act: str, section: str, target_act: str = "") -> str:
     """Map an IPC section to its BNS equivalent (or vice versa).
 
-    Uses known mappings from the Ministry of Law and Justice.
+    EXPERIMENTAL: These mappings are AI-generated and UNVERIFIED.
+    Always cross-check with official sources (Ministry of Law and Justice, NCRB).
     For unmapped sections, use themis_ask for AI-assisted cross-referencing.
 
     Args:
@@ -227,12 +217,19 @@ def themis_map_section(source_act: str, section: str, target_act: str = "") -> s
     result = map_section(source_act, section, target)
 
     if result["found"]:
-        return (
+        response = (
             f"{result['source_act']} Section {result['source_section']} "
             f"corresponds to {result['target_act']} Section {result['target_section']}."
         )
+        warning = result.get("warning")
+        if warning:
+            response += f"\n\n{warning}"
+        return response
 
     error_msg: str = result.get("error", "Mapping not found.")
+    warning = result.get("warning")
+    if warning:
+        error_msg += f"\n\n{warning}"
     return error_msg
 
 
