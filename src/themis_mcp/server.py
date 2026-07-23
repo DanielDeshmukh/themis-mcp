@@ -8,7 +8,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import Context, FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
@@ -168,17 +168,25 @@ async def metrics_endpoint(request: Request) -> Response:
 if "ask" in _enabled_tools:
 
     @mcp.tool()
-    def themis_ask(
+    async def themis_ask(
         question: str,
         temperature: float = 0.7,
         max_tokens: int = 512,
+        ctx: Context | None = None,
     ) -> str:
         """Answer a question about Indian statutory law (BNS, IPC, BNSS, BSA, RTI, CPA).
 
         Returns section, act, grounding status, and confidence metadata.
         Use for interpretive questions. For raw text, use themis_lookup.
         """
+        if ctx:
+            await ctx.report_progress(0, 100, "Starting LLM inference...")
+
         result = ask(question, temperature=temperature, max_tokens=max_tokens)
+
+        if ctx:
+            await ctx.report_progress(100, 100, "Complete")
+
         return _format_tool_output(result)
 
 

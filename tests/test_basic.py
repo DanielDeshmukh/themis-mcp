@@ -157,9 +157,11 @@ def test_sessions():
 
 def test_per_tool_ratelimits():
     """Per-tool rate limits are configured correctly."""
-    from themis_mcp.ratelimit import RateLimiter, RateLimitConfig
+    from themis_mcp.ratelimit import RateLimitConfig, RateLimiter
 
-    limiter = RateLimiter(default_config=RateLimitConfig(max_calls=10, window_seconds=1))
+    limiter = RateLimiter(
+        default_config=RateLimitConfig(max_calls=10, window_seconds=1)
+    )
     limiter.configure("expensive_tool", RateLimitConfig(max_calls=2, window_seconds=1))
 
     # Default tool allows 10 calls
