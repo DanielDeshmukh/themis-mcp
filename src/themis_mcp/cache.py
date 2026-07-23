@@ -8,10 +8,7 @@ import logging
 import time
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from themis_mcp.structured import LookupResult, ToolResult
+from typing import Any
 
 logger = logging.getLogger("themis_mcp")
 
