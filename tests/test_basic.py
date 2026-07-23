@@ -29,3 +29,33 @@ def test_acts():
     assert "bnss" in acts
     assert "bsa" in acts
     assert acts["bns"]["sections"] == 358
+
+
+def test_prompts():
+    """Prompts module returns valid message lists."""
+    from themis_mcp.prompts import (
+        consumer_complaint,
+        explain_section,
+        ipc_bns_compare,
+        punishment_for_offense,
+        right_know,
+        section_lookup,
+    )
+
+    assert len(ipc_bns_compare("302")) == 1
+    assert len(explain_section("BNS", "103")) == 1
+    assert len(punishment_for_offense("BNS", "murder")) == 1
+    assert len(right_know("6")) == 1
+    assert len(consumer_complaint()) == 1
+    assert len(section_lookup("bns", "103")) == 1
+
+    for messages in [
+        ipc_bns_compare("302"),
+        explain_section("BNS", "103"),
+        punishment_for_offense("BNS", "murder"),
+        right_know("6"),
+        consumer_complaint(),
+        section_lookup("bns", "103"),
+    ]:
+        assert isinstance(messages, list)
+        assert messages[0].role == "user"

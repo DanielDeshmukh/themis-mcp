@@ -163,6 +163,77 @@ def resource_acts() -> str:
     return get_acts()
 
 
+@mcp.prompt()
+def compare_ipc_bns(section: str) -> list:
+    """Compare an IPC section with its BNS equivalent.
+
+    Args:
+        section: IPC section number (e.g. "302", "376")
+    """
+    from themis_mcp.prompts import ipc_bns_compare
+
+    return ipc_bns_compare(section)
+
+
+@mcp.prompt()
+def explain_section(act: str, section: str) -> list:
+    """Explain a specific section in plain language.
+
+    Args:
+        act: Act name (e.g. "BNS", "IPC", "BNSS")
+        section: Section number
+    """
+    from themis_mcp.prompts import explain_section as _explain
+
+    return _explain(act, section)
+
+
+@mcp.prompt()
+def punishment_for(act: str, offense: str) -> list:
+    """Find the punishment for a specific offense.
+
+    Args:
+        act: Act name (e.g. "BNS", "IPC")
+        offense: Offense name (e.g. "murder", "theft", "robbery")
+    """
+    from themis_mcp.prompts import punishment_for_offense
+
+    return punishment_for_offense(act, offense)
+
+
+@mcp.prompt()
+def rti_rights(section: str = "6") -> list:
+    """RTI citizen rights query template.
+
+    Args:
+        section: RTI section number (default: "6" - Right to information)
+    """
+    from themis_mcp.prompts import right_know
+
+    return right_know(section)
+
+
+@mcp.prompt()
+def consumer_complaint() -> list:
+    """Consumer complaint filing guide."""
+    from themis_mcp.prompts import consumer_complaint as _complaint
+
+    return _complaint()
+
+
+@mcp.prompt()
+def section_summary(act: str, section: str) -> list:
+    """Quick section lookup with legal significance.
+
+    Args:
+        act: Act identifier (e.g. "bns", "ipc", "bnss", "bsa")
+        section: Section number
+    """
+    from themis_mcp.prompts import section_lookup
+
+    return section_lookup(act, section)
+
+
 def main() -> None:
     """Entry point for the MCP server.
 

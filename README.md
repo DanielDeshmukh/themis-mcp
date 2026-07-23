@@ -193,6 +193,26 @@ Returns `503` if the model is still loading.
 
 ---
 
+## Prompts
+
+Pre-built legal query templates for common tasks:
+
+| Prompt | Description | Args |
+|--------|-------------|------|
+| `compare_ipc_bns` | Compare IPC section with BNS equivalent | `section` (e.g. "302") |
+| `explain_section` | Explain a section in plain language | `act`, `section` |
+| `punishment_for` | Find punishment for an offense | `act`, `offense` |
+| `rti_rights` | RTI citizen rights query | `section` (default: "6") |
+| `consumer_complaint` | Consumer complaint filing guide | — |
+| `section_summary` | Quick section lookup with significance | `act`, `section` |
+
+**Usage in MCP clients:**
+```
+Use the themis prompt "compare_ipc_bns" with section "302"
+```
+
+---
+
 ## Dynamic Tool Loading
 
 Control which tools are exposed to the MCP client via environment variable:
