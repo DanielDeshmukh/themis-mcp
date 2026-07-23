@@ -118,6 +118,7 @@ themis-mcp
 | `THEMIS_MCP_TRANSPORT` | `stdio` | `stdio` or `streamable-http` |
 | `THEMIS_MCP_HOST` | `0.0.0.0` | Host to bind to (HTTP mode) |
 | `THEMIS_MCP_PORT` | `8000` | Port to listen on (HTTP mode) |
+| `THEMIS_MCP_TOOLS` | `ask,lookup` | Comma-separated list of tools to enable |
 
 ---
 
@@ -189,6 +190,67 @@ Returns `503` if the model is still loading.
 |-----|-------------|
 | `themis://disclaimer` | Legal disclaimer (appended to all tool responses) |
 | `themis://acts` | List of supported acts with section counts |
+
+---
+
+## Dynamic Tool Loading
+
+Control which tools are exposed to the MCP client via environment variable:
+
+```bash
+# Only expose the ask tool (no lookup)
+export THEMIS_MCP_TOOLS=ask
+
+# Only expose the lookup tool (no LLM inference)
+export THEMIS_MCP_TOOLS=lookup
+
+# Both tools (default)
+export THEMIS_MCP_TOOLS=ask,lookup
+```
+
+---
+
+## Rate Limiting
+
+The `themis_ask` tool is rate-limited to prevent abuse:
+
+- **Limit:** 30 calls per minute
+- **Response:** `Error (RATE_LIMITED): Rate limit exceeded. Try again in X seconds.`
+
+Configure via the `RateLimitConfig` in `ratelimit.py` if needed.
+
+---
+
+## Error Handling
+
+Errors are classified into three categories:
+
+| Class | Meaning | LLM Action |
+|-------|---------|------------|
+| `CLIENT_ERROR` | Bad input, missing params | Self-correct the request |
+| `SERVER_ERROR` | Internal failure (GPU, model) | Abort and notify user |
+| `EXTERNAL_ERROR` | Network, download failure | Retry with backoff |
+
+Example error response:
+```
+Error (SERVER_ERROR): Insufficient GPU memory
+Details: THEMIS requires ~13GB VRAM. Close other GPU applications.
+```
+
+---
+
+## OpenTelemetry Tracing
+
+Optional tracing for production monitoring. Install with:
+
+```bash
+pip install "themis-mcp[otel]"
+```
+
+Traces are emitted for every tool call with:
+- `mcp.tool.name` — tool being called
+- `mcp.tool.question` — input (truncated to 100 chars)
+- Latency and error status
 
 ---
 
