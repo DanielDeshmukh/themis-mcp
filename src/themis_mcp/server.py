@@ -135,6 +135,7 @@ def _format_tool_output(result: Any) -> str:
 @mcp.custom_route("/health", methods=["GET"])
 async def health_check(request: Request) -> Response:
     """Health check endpoint for container orchestration and monitoring."""
+    from themis_mcp.cache import cache
     from themis_mcp.tools import _model
 
     status = "healthy" if _model is not None else "starting"
@@ -145,6 +146,7 @@ async def health_check(request: Request) -> Response:
             "status": status,
             "service": "themis-mcp",
             "model_loaded": _model is not None,
+            "cache": cache.stats,
         },
         status_code=code,
     )

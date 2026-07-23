@@ -93,3 +93,23 @@ def test_structured_output():
 
     not_found = LookupResult(found=False, text="Not found.")
     assert not_found.to_dict()["found"] is False
+
+
+def test_cache():
+    """Cache module stores and retrieves values correctly."""
+    from themis_mcp.cache import CacheConfig, ResponseCache
+
+    cache = ResponseCache(CacheConfig(max_size=2, ttl_seconds=1.0))
+
+    cache.set("test", "value1", arg="a")
+    assert cache.get("test", arg="a") == "value1"
+    assert cache.get("test", arg="b") is None
+
+    stats = cache.stats
+    assert stats["size"] == 1
+    assert stats["hits"] == 1
+    assert stats["misses"] == 1
+
+    cache.clear()
+    assert cache.get("test", arg="a") is None
+    assert cache.stats["size"] == 0
