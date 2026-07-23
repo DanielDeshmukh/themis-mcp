@@ -16,6 +16,11 @@ from themis_mcp.tools import ask, lookup
 
 logger = logging.getLogger("themis_mcp")
 
+# Dynamic tool loading: configure via environment variables
+# THEMIS_MCP_TOOLS: comma-separated list of tools to enable (default: "ask,lookup")
+_enabled_tools = os.environ.get("THEMIS_MCP_TOOLS", "ask,lookup").split(",")
+_enabled_tools = [t.strip().lower() for t in _enabled_tools]
+
 
 @asynccontextmanager
 async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
