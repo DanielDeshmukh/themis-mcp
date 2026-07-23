@@ -86,11 +86,24 @@ def ask(
             "---\n" + DISCLAIMER
         )
 
-    response = _model.ask(
-        question,
-        temperature=temperature,
-        max_new_tokens=max_tokens,
-    )
+    try:
+        response = _model.ask(
+            question,
+            temperature=temperature,
+            max_new_tokens=max_tokens,
+        )
+    except Exception as e:
+        error_msg = str(e).lower()
+        if "memory" in error_msg or "oom" in error_msg:
+            help_msg = (
+                "Insufficient GPU memory for inference. "
+                "Try reducing max_tokens or close other GPU applications.\n"
+                f"Details: {e}"
+            )
+        else:
+            help_msg = f"Inference failed: {e}"
+
+        return f"Error: {help_msg}\n\n---\n" + DISCLAIMER
 
     return _format_response(
         text=response.text,

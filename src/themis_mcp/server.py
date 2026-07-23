@@ -20,12 +20,49 @@ async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
     from themis_mcp.tools import set_model
 
     logger.info("Loading THEMIS model...")
-    from themis.model import ThemisModel
 
-    model = ThemisModel.from_pretrained()
-    set_model(model)
-    logger.info("THEMIS model loaded successfully.")
-    yield {"model": model}
+    try:
+        from themis.model import ThemisModel
+
+        model = ThemisModel.from_pretrained()
+        set_model(model)
+        logger.info("THEMIS model loaded successfully.")
+        yield {"model": model}
+    except ImportError as e:
+        error_msg = (
+            "Failed to import themis package. "
+            "Install it with: pip install themis-llm\n"
+            f"Details: {e}"
+        )
+        logger.error(error_msg)
+        raise RuntimeError(error_msg) from e
+    except Exception as e:
+        error_msg = str(e).lower()
+        if "cuda" in error_msg or "gpu" in error_msg or "device" in error_msg:
+            help_msg = (
+                "No GPU available or CUDA not configured. "
+                "THEMIS requires a GPU with ~13GB VRAM for inference.\n"
+                "Install CUDA: https://developer.nvidia.com/cuda-downloads\n"
+                f"Details: {e}"
+            )
+        elif "memory" in error_msg or "oom" in error_msg:
+            help_msg = (
+                "Insufficient GPU memory. THEMIS requires ~13GB VRAM.\n"
+                "Close other GPU-intensive applications and try again.\n"
+                f"Details: {e}"
+            )
+        elif (
+            "download" in error_msg or "connect" in error_msg or "network" in error_msg
+        ):
+            help_msg = (
+                "Failed to download model weights. Check your internet connection.\n"
+                f"Details: {e}"
+            )
+        else:
+            help_msg = f"Failed to load THEMIS model: {e}"
+
+        logger.error(help_msg)
+        raise RuntimeError(help_msg) from e
 
 
 mcp = FastMCP(
