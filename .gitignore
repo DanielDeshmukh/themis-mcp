@@ -11,3 +11,4 @@ env/
 *.pth
 .mypy_cache/
 .ruff_cache/
+*-interview-prep.md
